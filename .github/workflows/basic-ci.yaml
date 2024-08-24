@@ -34,10 +34,11 @@ jobs:
       - name: Install Pyenv
         run: |
           curl https://pyenv.run | bash
-          echo 'export PYENV_ROOT="$HOME/.pyenv"' >> $GITHUB_ENV
-          echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> $GITHUB_ENV
-          echo 'eval "$(pyenv init --path)"' >> $GITHUB_ENV
-          echo 'eval "$(pyenv init -)"' >> $GITHUB_ENV
+          echo 'export PYENV_ROOT="$HOME/.pyenv"' >> $BASH_ENV
+          echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> $BASH_ENV
+          echo 'eval "$(pyenv init --path)"' >> $BASH_ENV
+          echo 'eval "$(pyenv init -)"' >> $BASH_ENV
+        shell: bash
 
       - name: Install Python version from Poetry
         run: |
@@ -52,6 +53,7 @@ jobs:
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
           echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
+        shell: bash
 
       - name: Use correct Python version from Poetry
         run: |
@@ -88,10 +90,11 @@ jobs:
       - name: Install Pyenv
         run: |
           curl https://pyenv.run | bash
-          echo 'export PYENV_ROOT="$HOME/.pyenv"' >> $GITHUB_ENV
-          echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> $GITHUB_ENV
-          echo 'eval "$(pyenv init --path)"' >> $GITHUB_ENV
-          echo 'eval "$(pyenv init -)"' >> $GITHUB_ENV
+          echo 'export PYENV_ROOT="$HOME/.pyenv"' >> $BASH_ENV
+          echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> $BASH_ENV
+          echo 'eval "$(pyenv init --path)"' >> $BASH_ENV
+          echo 'eval "$(pyenv init -)"' >> $BASH_ENV
+        shell: bash
 
       - name: Install Python version from Poetry
         run: |
@@ -106,6 +109,7 @@ jobs:
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
           echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
+        shell: bash
 
       - name: Use correct Python version from Poetry
         run: |
