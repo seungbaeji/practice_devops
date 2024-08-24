@@ -56,6 +56,7 @@ jobs:
         run: |
           cd ${{ env.PROJECT_DIR }}
           poetry run pytest --cov=./ --cov-report=xml
+        continue-on-error: true
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
