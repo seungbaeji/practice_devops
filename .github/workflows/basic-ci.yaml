@@ -9,6 +9,16 @@ on:
     branches: [main]
     paths:
       - "basic-ci/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Which environment to deploy to"
+        required: false
+        default: "dev"
+      version:
+        description: "Version to deploy"
+        required: false
+        default: "latest"
 
 jobs:
   test:
@@ -74,4 +84,4 @@ jobs:
       - name: Deploy application
         run: |
           cd ${{ env.PROJECT_DIR }}
-          echo "Deploying application..."
+          echo "Deploying version ${{ github.event.inputs.version }} to ${{ github.event.inputs.environment }} environment"
