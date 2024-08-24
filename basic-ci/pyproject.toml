@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "basic-ci"
+version = "0.1.0"
+description = "A simple project for CI practice"
+authors = [
+    "Seungbae Ji <seungbae.ji@gmail.com>",
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.32.3"
+pydantic = "^2.8.2"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+pytest-cov = "^5.0.0"
+pytest-mock = "^3.14.0"
+
+[build-system]
+requires = [
+    "poetry-core",
+]
+build-backend = "poetry.core.masonry.api"

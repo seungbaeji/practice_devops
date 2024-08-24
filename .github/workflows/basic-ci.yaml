@@ -1,0 +1,67 @@
+name: Python CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "basic-ci/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "basic-ci/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_DIR: basic-ci
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Install dependencies (dev)
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+          poetry install
+
+      - name: Run tests and collect coverage
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+          poetry run pytest --cov=./ --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ env.PROJECT_DIR }}
+          file: ${{ env.PROJECT_DIR }}/coverage.xml
+          name: ${{ env.PROJECT_DIR }}-coverage-report
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    env:
+      PROJECT_DIR: basic-ci
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Install production dependencies
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+          poetry install --no-dev
+
+      - name: Deploy application
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+          echo "Deploying application..."
