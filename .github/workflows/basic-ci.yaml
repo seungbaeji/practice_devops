@@ -31,37 +31,21 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Pyenv
+      - name: Extract Python version from pyproject.toml
         run: |
-          curl https://pyenv.run | bash
-          echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-          echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-          echo 'eval "$(pyenv init --path)"' >> ~/.bashrc
-          echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-          echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
-          source ~/.bashrc
+          PYTHON_VERSION=$(grep -Po '(?<=python = ")[^"]*' ${{ env.PROJECT_DIR }}/pyproject.toml | sed 's/\^//')
+          echo "Python version extracted: $PYTHON_VERSION"
+          echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_ENV
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          echo "export PATH=$HOME/.local/bin:$PATH" >> ~/.bashrc
-          source ~/.bashrc
-
-      - name: Install Python version with Pyenv
-        run: |
-          export PYENV_ROOT="$HOME/.pyenv"
-          export PATH="$PYENV_ROOT/bin:$PATH"
-          eval "$(pyenv init --path)"
-          eval "$(pyenv init -)"
-
-          PYTHON_VERSION=$(grep -Po '(?<=python = ")[^"]*' ${{ env.PROJECT_DIR }}/pyproject.toml | sed 's/\^//')
-          pyenv install $PYTHON_VERSION -s  # Install the required Python version
-          pyenv global $PYTHON_VERSION    # Set the global Python version
-
-      - name: Use correct Python version from Poetry
-        run: |
-          cd ${{ env.PROJECT_DIR }}
-          poetry env use $(pyenv which python)
+          echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
 
       - name: Install dependencies (dev)
         run: |
@@ -90,37 +74,22 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Pyenv
+      - name: Extract Python version from pyproject.toml
         run: |
-          curl https://pyenv.run | bash
-          echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-          echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-          echo 'eval "$(pyenv init --path)"' >> ~/.bashrc
-          echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-          echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
-          source ~/.bashrc
+          PYTHON_VERSION=$(grep -Po '(?<=python = ")[^"]*' ${{ env.PROJECT_DIR }}/pyproject.toml | sed 's/\^//')
+          echo "Python version extracted: $PYTHON_VERSION"
+          echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_ENV
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
           echo "export PATH=$HOME/.local/bin:$PATH" >> ~/.bashrc
           source ~/.bashrc
-
-      - name: Install Python version with Pyenv
-        run: |
-          export PYENV_ROOT="$HOME/.pyenv"
-          export PATH="$PYENV_ROOT/bin:$PATH"
-          eval "$(pyenv init --path)"
-          eval "$(pyenv init -)"
-
-          PYTHON_VERSION=$(grep -Po '(?<=python = ")[^"]*' ${{ env.PROJECT_DIR }}/pyproject.toml | sed 's/\^//')
-          pyenv install $PYTHON_VERSION -s  # Install the required Python version
-          pyenv global $PYTHON_VERSION    # Set the global Python version
-
-      - name: Use correct Python version from Poetry
-        run: |
-          cd ${{ env.PROJECT_DIR }}
-          poetry env use $(pyenv which python)
 
       - name: Install production dependencies
         run: |
