@@ -99,3 +99,36 @@ def test_empty_user_data() -> None:
 
     assert len(valid_users) == 0  # No valid users should be present
     assert len(active_users) == 0  # No active users should be present
+
+
+def test_duplicate_user_data() -> None:
+    """
+    Tests that validate_users correctly handles duplicate user data.
+    """
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = [
+        {"id": 1, "name": "Alice", "is_active": True},  # valid
+        {"id": 1, "name": "Alice", "is_active": True},  # duplicate valid user
+        {"id": 2, "name": "Bob", "is_active": False},   # valid but inactive
+        {"id": 2, "name": "Bob", "is_active": False},   # duplicate valid but inactive user
+        {"id": 3, "name": "Charlie", "is_active": True},  # valid
+        {"id": 3, "name": "Charlie", "is_active": True},  # duplicate valid user
+    ]
+
+    with patch("requests.get", return_value=mock_response):
+        url = "http://example.com/api/users"
+        users_data = fetch_user_data(url)
+        valid_users = validate_users(users_data)
+        active_users = filter_active_users(valid_users)
+
+        # There should be 3 unique valid users
+        assert len(valid_users) == 3
+        assert valid_users[0].name == "Alice"
+        assert valid_users[1].name == "Bob"
+        assert valid_users[2].name == "Charlie"
+
+        # Only 2 active users should be present
+        assert len(active_users) == 2
+        assert active_users[0].name == "Alice"
+        assert active_users[1].name == "Charlie"
