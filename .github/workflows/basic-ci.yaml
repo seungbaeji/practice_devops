@@ -47,15 +47,15 @@ jobs:
           echo "export PATH=$HOME/.local/bin:$PATH" >> ~/.bashrc
           source ~/.bashrc
 
-      - name: Install Python version from Poetry
+      - name: Install Python version with Pyenv
         run: |
-          cd ${{ env.PROJECT_DIR }}
           export PYENV_ROOT="$HOME/.pyenv"
           export PATH="$PYENV_ROOT/bin:$PATH"
           eval "$(pyenv init --path)"
           eval "$(pyenv init -)"
-          pyenv install $(poetry env info --path | grep -o '[0-9]\.[0-9]\.[0-9]') -s  # Install the required Python version
-          pyenv global $(poetry env info --path | grep -o '[0-9]\.[0-9]\.[0-9]')    # Set the global Python version
+          PYTHON_VERSION=$(grep -Po '(?<=python = ")[^"]*' ${{ env.PROJECT_DIR }}/pyproject.toml)  # Extract Python version from pyproject.toml
+          pyenv install $PYTHON_VERSION -s  # Install the required Python version
+          pyenv global $PYTHON_VERSION    # Set the global Python version
 
       - name: Use correct Python version from Poetry
         run: |
@@ -105,15 +105,15 @@ jobs:
           echo "export PATH=$HOME/.local/bin:$PATH" >> ~/.bashrc
           source ~/.bashrc
 
-      - name: Install Python version from Poetry
+      - name: Install Python version with Pyenv
         run: |
-          cd ${{ env.PROJECT_DIR }}
           export PYENV_ROOT="$HOME/.pyenv"
           export PATH="$PYENV_ROOT/bin:$PATH"
           eval "$(pyenv init --path)"
           eval "$(pyenv init -)"
-          pyenv install $(poetry env info --path | grep -o '[0-9]\.[0-9]\.[0-9]') -s  # Install the required Python version
-          pyenv global $(poetry env info --path | grep -o '[0-9]\.[0-9]\.[0-9]')    # Set the global Python version
+          PYTHON_VERSION=$(grep -Po '(?<=python = ")[^"]*' ${{ env.PROJECT_DIR }}/pyproject.toml)  # Extract Python version from pyproject.toml
+          pyenv install $PYTHON_VERSION -s  # Install the required Python version
+          pyenv global $PYTHON_VERSION    # Set the global Python version
 
       - name: Use correct Python version from Poetry
         run: |
