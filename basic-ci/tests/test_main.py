@@ -69,3 +69,33 @@ def test_fetch_and_validate_users() -> None:
         assert len(active_users) == 2
         assert active_users[0].name == "Alice"
         assert active_users[1].name == "David"
+
+
+def test_empty_user_data() -> None:
+    """
+    Tests the behavior of validate_users and filter_active_users when no valid user data is present.
+    """
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = []  # No users returned
+
+    # Test with no users returned from the API
+    with patch("requests.get", return_value=mock_response):
+        url = "http://example.com/api/users"
+        users_data = fetch_user_data(url)
+        valid_users = validate_users(users_data)
+        active_users = filter_active_users(valid_users)
+
+        assert len(valid_users) == 0  # No valid users
+        assert len(active_users) == 0  # No active users
+
+    # Test with all users being invalid
+    invalid_users_data = [
+        {"id": None, "name": "Bob", "is_active": False},  # invalid id
+        {"id": -2, "name": "", "is_active": True},  # invalid id and name
+    ]
+    valid_users = validate_users(invalid_users_data)
+    active_users = filter_active_users(valid_users)
+
+    assert len(valid_users) == 0  # No valid users should be present
+    assert len(active_users) == 0  # No active users should be present
