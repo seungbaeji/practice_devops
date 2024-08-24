@@ -34,11 +34,12 @@ jobs:
       - name: Install Pyenv
         run: |
           curl https://pyenv.run | bash
-          echo 'export PYENV_ROOT="$HOME/.pyenv"' >> $BASH_ENV
-          echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> $BASH_ENV
-          echo 'eval "$(pyenv init --path)"' >> $BASH_ENV
-          echo 'eval "$(pyenv init -)"' >> $BASH_ENV
-        shell: bash
+          echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+          echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+          echo 'eval "$(pyenv init --path)"' >> ~/.bashrc
+          echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+          echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
+          source ~/.bashrc
 
       - name: Install Python version from Poetry
         run: |
@@ -52,8 +53,8 @@ jobs:
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
-        shell: bash
+          echo "export PATH=$HOME/.local/bin:$PATH" >> ~/.bashrc
+          source ~/.bashrc
 
       - name: Use correct Python version from Poetry
         run: |
@@ -90,11 +91,12 @@ jobs:
       - name: Install Pyenv
         run: |
           curl https://pyenv.run | bash
-          echo 'export PYENV_ROOT="$HOME/.pyenv"' >> $BASH_ENV
-          echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> $BASH_ENV
-          echo 'eval "$(pyenv init --path)"' >> $BASH_ENV
-          echo 'eval "$(pyenv init -)"' >> $BASH_ENV
-        shell: bash
+          echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+          echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+          echo 'eval "$(pyenv init --path)"' >> ~/.bashrc
+          echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+          echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
+          source ~/.bashrc
 
       - name: Install Python version from Poetry
         run: |
@@ -108,8 +110,8 @@ jobs:
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-          echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
-        shell: bash
+          echo "export PATH=$HOME/.local/bin:$PATH" >> ~/.bashrc
+          source ~/.bashrc
 
       - name: Use correct Python version from Poetry
         run: |
