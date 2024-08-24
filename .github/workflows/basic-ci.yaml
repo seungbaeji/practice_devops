@@ -49,6 +49,7 @@ jobs:
 
       - name: Install Python version from Poetry
         run: |
+          cd ${{ env.PROJECT_DIR }}
           export PYENV_ROOT="$HOME/.pyenv"
           export PATH="$PYENV_ROOT/bin:$PATH"
           eval "$(pyenv init --path)"
@@ -106,6 +107,7 @@ jobs:
 
       - name: Install Python version from Poetry
         run: |
+          cd ${{ env.PROJECT_DIR }}
           export PYENV_ROOT="$HOME/.pyenv"
           export PATH="$PYENV_ROOT/bin:$PATH"
           eval "$(pyenv init --path)"
