@@ -61,7 +61,7 @@ jobs:
       - name: Use correct Python version from Poetry
         run: |
           cd ${{ env.PROJECT_DIR }}
-          poetry env use python3
+          poetry env use $(pyenv which python)
 
       - name: Install dependencies (dev)
         run: |
@@ -120,7 +120,7 @@ jobs:
       - name: Use correct Python version from Poetry
         run: |
           cd ${{ env.PROJECT_DIR }}
-          poetry env use python3
+          poetry env use $(pyenv which python)
 
       - name: Install production dependencies
         run: |
