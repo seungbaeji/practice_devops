@@ -1,21 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, Optional, TypedDict
-
 import requests
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import ValidationError
 
-
-class User(BaseModel):
-    id: int = Field(..., ge=1)
-    name: str = Field(..., min_length=1)
-    is_active: bool
-
-
-class UserDict(TypedDict):
-    id: int
-    name: Optional[str]
-    is_active: Optional[bool]
+from .datamodel import User, UserDict
 
 
 def fetch_user_data(url: str) -> list[UserDict]:

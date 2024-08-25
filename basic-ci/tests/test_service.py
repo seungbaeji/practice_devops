@@ -1,12 +1,7 @@
 from unittest.mock import Mock, patch
 
-from basic_ci.main import (
-    User,
-    UserDict,
-    fetch_user_data,
-    filter_active_users,
-    validate_users,
-)
+from basic_ci.datamodel import User, UserDict
+from basic_ci.service import fetch_user_data, filter_active_users, validate_users
 
 
 def test_validate_users() -> None:
@@ -110,8 +105,12 @@ def test_duplicate_user_data() -> None:
     mock_response.json.return_value = [
         {"id": 1, "name": "Alice", "is_active": True},  # valid
         {"id": 1, "name": "Alice", "is_active": True},  # duplicate valid user
-        {"id": 2, "name": "Bob", "is_active": False},   # valid but inactive
-        {"id": 2, "name": "Bob", "is_active": False},   # duplicate valid but inactive user
+        {"id": 2, "name": "Bob", "is_active": False},  # valid but inactive
+        {
+            "id": 2,
+            "name": "Bob",
+            "is_active": False,
+        },  # duplicate valid but inactive user
         {"id": 3, "name": "Charlie", "is_active": True},  # valid
         {"id": 3, "name": "Charlie", "is_active": True},  # duplicate valid user
     ]
