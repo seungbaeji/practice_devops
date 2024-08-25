@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 
 # Poetry specific files
-poetry.lock
 .cache/
 
 # Environments
