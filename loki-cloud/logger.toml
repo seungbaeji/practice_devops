@@ -7,15 +7,22 @@ datefmt = "%Y-%m-%d %H:%M:%S"
 tzname = "Asia/Seoul"
 format = "%(asctime)-s - %(name)-15s - %(levelname)-8s - %(message)s"
 
-[formatters.debug]
+[formatters.json]
 class = "logging.Formatter"
-datefmt = "%Y-%m-%d %H:%M:%S"
-format = "%(asctime)-s - %(name)-15s - %(levelname)-8s - %(funcName)s - %(message)s"
+format = '{"time": "%(asctime)s", "level": "%(levelname)s", "msg": "%(message)s", "func": "%(funcName)s", "logger": "%(name)s", "line": "%(lineno)d", "process": "%(process)d"}'
+datefmt = "%Y-%m-%dT%H:%M:%S.%fZ"
+tzname = "Asia/Seoul"
+
+[formatters.logfmt]
+class = "logging.Formatter"
+format = "time=%(asctime)s level=%(levelname)s msg=\"%(message)s\" func=%(funcName)s logger=%(name)s line=%(lineno)d process=%(process)d"
+datefmt = "%Y-%m-%dT%H:%M:%S.%fZ"
+tzname = "Asia/Seoul"
 
 [handlers.console]
 class = "logging.StreamHandler"
 level = "INFO"
-formatter = "default"
+formatter = "json"
 stream = "ext://sys.stdout"
 
 [handlers.info_file_handler]
@@ -30,7 +37,7 @@ encoding = "utf8"
 [handlers.error_file_handler]
 class = "logging.handlers.RotatingFileHandler"
 level = "ERROR"
-formatter = "debug"
+formatter = "logfmt"
 filename = "./tmp/errors.log"
 maxBytes = 10485760
 backupCount = 20
@@ -39,7 +46,7 @@ encoding = "utf8"
 [handlers.debug_file_handler]
 class = "logging.handlers.RotatingFileHandler"
 level = "DEBUG"
-formatter = "debug"
+formatter = "logfmt"
 filename = "./tmp/debug.log"
 maxBytes = 10485760
 backupCount = 20
@@ -48,7 +55,7 @@ encoding = "utf8"
 [handlers.critical_file_handler]
 class = "logging.handlers.RotatingFileHandler"
 level = "CRITICAL"
-formatter = "debug"
+formatter = "logfmt"
 filename = "./tmp/critical.log"
 maxBytes = 10485760
 backupCount = 20
@@ -57,7 +64,7 @@ encoding = "utf8"
 [handlers.warn_file_handler]
 class = "logging.handlers.RotatingFileHandler"
 level = "WARN"
-formatter = "debug"
+formatter = "logfmt"
 filename = "./tmp/warn.log"
 maxBytes = 10485760
 backupCount = 20
