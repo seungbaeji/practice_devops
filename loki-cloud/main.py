@@ -18,15 +18,22 @@ try:
         logger.info('This is an INFO log message from my application.')
 
         # 30% 확률로 WARNING 로그 생성
-        if random.random() < 0.3:
-            logger.warning('This is a WARNING log message!')
+        try:
+            if random.random() < 0.3:
+                raise ValueError('This is a simulated ValueError!')
+        except ValueError as e:
+            logger.exception(f'{e}')
 
         # 20% 확률로 ERROR 로그 생성
-        if random.random() < 0.2:
-            logger.error('This is an ERROR log message!')
+        try:
+            if random.random() < 0.2:
+                # ZeroDivisionError를 인위적으로 발생
+                result = 1 / 0
+        except ZeroDivisionError as e:
+            logger.exception(f'{e}')
 
         # 1초 간격으로 로그 생성
         time.sleep(1)
 
 except KeyboardInterrupt:
-    print("Logging stopped.")
+    logger.info("Logging stopped by user.")
