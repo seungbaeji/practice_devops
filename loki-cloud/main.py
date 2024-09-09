@@ -27,7 +27,7 @@ try:
             if random.random() < 0.3:
                 raise ValueError('This is a simulated ValueError!')
         except ValueError as e:
-            logger.exception(f'{e}')
+            logger.warning(f'{e}')
 
         # 20% 확률로 ERROR 로그 생성
         try:
