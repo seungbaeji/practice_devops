@@ -3,6 +3,10 @@ import logging.config
 import tomllib
 import time
 import random
+from pathlib import Path
+
+LOG_DIR = Path('tmp')
+LOG_DIR.mkdir(exist_ok=True, parents=True)
 
 # TOML 파일 읽기
 with open('logger.toml', 'rb') as f:
@@ -10,6 +14,7 @@ with open('logger.toml', 'rb') as f:
 
 logging.config.dictConfig(config)
 logger = logging.getLogger()
+
 
 # 주기적으로 로그 생성
 try:

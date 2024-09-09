@@ -10,31 +10,31 @@ format = "%(asctime)-s - %(name)-15s - %(levelname)-8s - %(message)s"
 [formatters.json]
 class = "logging.Formatter"
 format = '{"time": "%(asctime)s", "level": "%(levelname)s", "msg": "%(message)s", "func": "%(funcName)s", "logger": "%(name)s", "line": "%(lineno)d", "process": "%(process)d"}'
-datefmt = "%Y-%m-%dT%H:%M:%S.%fZ"
+# datefmt = "%Y-%m-%dT%H:%M:%S.%fZ"
 tzname = "Asia/Seoul"
 
 [formatters.logfmt]
 class = "logging.Formatter"
 format = "time=%(asctime)s level=%(levelname)s msg=\"%(message)s\" func=%(funcName)s logger=%(name)s line=%(lineno)d process=%(process)d"
-datefmt = "%Y-%m-%dT%H:%M:%S.%fZ"
+# datefmt = "%Y-%m-%dT%H:%M:%S.%fZ"
 tzname = "Asia/Seoul"
 
 [formatters.debug-json]
 class = "logging.Formatter"
 format = '{"time": "%(asctime)s", "level": "%(levelname)s", "msg": "%(message)s", "module": "%(module)s", "func": "%(funcName)s", "line": "%(lineno)d", "process": "%(process)d", "thread": "%(thread)d"}'
-datefmt = "%Y-%m-%dT%H:%M:%S.%fZ"
+# datefmt = "%Y-%m-%dT%H:%M:%S.%fZ"
 tzname = "Asia/Seoul"
 
 [formatters.adv-json]
 class = "pythonjsonlogger.jsonlogger.JsonFormatter"
 format = '{"time": "%(asctime)s", "level": "%(levelname)s", "msg": "%(message)s", "func": "%(funcName)s", "line": "%(lineno)d", "exception": "%(exc_info)s"}'
-datefmt = "%Y-%m-%dT%H:%M:%S.%fZ"
+# datefmt = "%Y-%m-%dT%H:%M:%S.%fZ"
 tzname = "Asia/Seoul"
 
 [handlers.console]
 class = "logging.StreamHandler"
 level = "INFO"
-formatter = "json"
+formatter = "adv-json"
 stream = "ext://sys.stdout"
 
 [handlers.info_file_handler]

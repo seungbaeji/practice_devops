@@ -9,3 +9,9 @@ docker run --name promtail \
     grafana/promtail:latest \
     -config.file=/etc/promtail/config.yaml
 ```
+
+## Run Promtail using Windows application
+
+```bash
+.\promtail\promtail-windows-amd64.exe --config.file=.\promtail\config.yaml
+```
