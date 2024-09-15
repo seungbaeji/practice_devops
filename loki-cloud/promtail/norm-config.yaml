@@ -1,0 +1,121 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: ./tmp/positions.yaml # log 를 어디까지 읽었는지 기록
+
+clients:
+  - url: https://363390:<Your Grafana.com API Token>@logs-prod-011.grafana.net/loki/api/v1/push
+
+scrape_configs:
+  # PostgreSQL 로그 수집 설정
+  - job_name: postgresql_logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: my-devops-practice
+          host: my-laptop
+          application: postgresql
+          # __path__: ./unstructured_log/postgresql.log # binary 실행시, 로그 파일 경로
+          __path__: /var/log/postgresql.log # container 실행시, PostgreSQL 로그 파일 경로
+    pipeline_stages:
+      - match:
+          selector: '{application="postgresql"}'
+          stages:
+            - regex:
+                expression: '^(?P<asctime>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}) (?P<timezone>[A-Za-z/_]+) \[(?P<lineno>\d+)\] (?P<levelname>[A-Z]+): (?P<message>.*)$'
+            - timestamp:
+                source: asctime
+                format: "2006-01-02 15:04:05.000" # 타임스탬프에서 타임존 제외
+                location: Asia/Seoul
+                fallback_now: true # 타임스탬프 파싱 실패 시 현재 시간 사용
+            - template:
+                source: message
+                template: |
+                  {
+                    "asctime": "{{ .asctime }}",
+                    "levelname": "{{ .levelname }}",
+                    "message": "{{ .message | toJson }}",
+                    "funcName": "N/A",
+                    "lineno": {{ .lineno }},
+                    "exc_info": "null"
+                  }
+            - output:
+                source: message
+                format: json
+
+  # MySQL 로그 수집 설정
+  - job_name: mysql_logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: my-devops-practice
+          host: my-laptop
+          application: mysql
+          # __path__: ./unstructured_log/mysql.log # binary 실행시, 로그 파일 경로
+          __path__: /var/log/mysql.log # container 실행시, MySQL 로그 파일 경로
+    pipeline_stages:
+      - match:
+          selector: '{application="mysql"}'
+          stages:
+            - regex:
+                expression: '^(?P<asctime>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z) (?P<lineno>\d+) \[(?P<levelname>\w+)\] (?P<message>.*)$'
+            - timestamp:
+                source: asctime
+                format: "2006-01-02T15:04:05.000000Z" # 밀리초 자릿수를 6자리로 맞춤
+                location: Asia/Seoul
+                fallback_now: true # 타임스탬프 파싱 실패 시 현재 시간 사용. 과거로그 사용시 테스트 용
+            - template:
+                source: message
+                template: |
+                  {
+                    "asctime": "{{ .asctime }}",
+                    "levelname": "{{ .levelname }}",
+                    "message": "{{ .message | toJson }}",
+                    "funcName": "N/A",
+                    "lineno": {{ .lineno }},
+                    "exc_info": "null"
+                  }
+            - output:
+                source: message
+                format: json
+
+  # Nginx 로그 수집 설정
+  - job_name: nginx_logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: my-devops-practice
+          host: my-laptop
+          application: nginx
+          # __path__: ./unstructured_log/nginx.log # binary 실행시, 로그 파일 경로
+          __path__: /var/log/nginx.log # container 실행시, Nginx 로그 파일 경로
+    pipeline_stages:
+      - match:
+          selector: '{application="nginx"}'
+          stages:
+            - regex:
+                expression: '^(?P<message>(?P<client_ip>\d+\.\d+\.\d+\.\d+) - - \[(?P<asctime>[^\]]+)\] "(?P<method>\w+) (?P<url>[^"]+) HTTP/1\.\d" (?P<status_code>\d+) (?P<size>\d+) "(?P<referrer>[^"]*)" "(?P<user_agent>[^"]*)")$'
+            - timestamp:
+                source: asctime
+                format: "02/Jan/2006:15:04:05 0000"
+                location: Asia/Seoul
+                fallback_now: true # 타임스탬프 파싱 실패 시 현재 시간 사용. 과거로그 사용시 테스트 용
+            - template:
+                source: message
+                template: |
+                  {
+                    "asctime": "{{ .asctime }}",
+                    "levelname": "INFO",
+                    "message": "{{ .message | toJson }}",
+                    "funcName": "N/A",
+                    "lineno": "N/A",
+                    "exc_info": "null"
+                  }
+            - output:
+                source: message
+                format: json

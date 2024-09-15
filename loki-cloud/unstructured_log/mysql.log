@@ -1,0 +1,4 @@
+2024-09-14T11:23:45.678913Z 12345 [Note] Access denied for user 'root'@'localhost' (using password: YES)
+2024-09-14T11:24:00.123456Z 12346 [Warning] Aborted connection 12346 to db: 'mydb' user: 'myuser' host: 'localhost' (Got an error reading communication packets)
+2024-09-14T12:23:45.678913Z 12345 [Note] Access denied for user 'root'@'localhost' (using password: YES)
+2024-09-14T12:24:00.123456Z 12346 [Warning] Aborted connection 12346 to db: 'mydb' user: 'myuser' host: 'localhost' (Got an error reading communication packets)

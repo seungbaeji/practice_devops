@@ -1,0 +1,8 @@
+2024-09-14 12:23:45.678 Asia/Seoul [12345] LOG:  connection received: host=192.168.1.10 port=5432
+2024-09-14 12:23:45.680 Asia/Seoul [12345] LOG:  connection authorized: user=postgres database=mydb
+2024-09-14 12:23:46.123 Asia/Seoul [12345] ERROR:  syntax error at or near "SELECTS" at character 15
+2024-09-14 12:23:46.123 Asia/Seoul [12345] STATEMENT:  SELECTS * FROM users;
+2024-09-14 13:23:45.678 Asia/Seoul [12345] LOG:  connection received: host=192.168.1.10 port=5432
+2024-09-14 13:23:45.680 Asia/Seoul [12345] LOG:  connection authorized: user=postgres database=mydb
+2024-09-14 13:23:46.123 Asia/Seoul [12345] ERROR:  syntax error at or near "SELECTS" at character 15
+2024-09-14 13:23:46.123 Asia/Seoul [12345] STATEMENT:  SELECTS * FROM users;
