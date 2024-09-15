@@ -1,7 +1,35 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nginx-cd
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: nginx-cd
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name localhost;
+
+        location / {
+            default_type text/plain;
+            return 200 'Hello, Argo CD!';
+        }
+
+        location /health {
+            return 200 'healthy';
+            add_header Content-Type text/plain;
+        }
+    }
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
+  namespace: nginx-cd
   labels:
     app: nginx
 spec:
@@ -32,6 +60,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nginx-service
+  namespace: nginx-cd
 spec:
   selector:
     app: nginx
@@ -40,25 +69,3 @@ spec:
       port: 80
       targetPort: 80
   type: ClusterIP
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-config
-data:
-  default.conf: |
-    server {
-        listen 80;
-        server_name localhost;
-
-        location / {
-            default_type text/plain;
-            return 200 'Hello, Argo CD!';
-        }
-
-        location /health {
-            return 200 'healthy';
-            add_header Content-Type text/plain;
-        }
-    }
