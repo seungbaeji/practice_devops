@@ -3,6 +3,18 @@ kind: Namespace
 metadata:
   name: nginx-cd
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-html
+  namespace: nginx-cd
+data:
+  index.html: |
+    <html>
+    <head><title>Hello DevOps</title></head>
+    <body><h1>Hello!!! DevOps</h1></body>
+    </html>
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,6 +37,14 @@ spec:
           image: nginx:latest
           ports:
             - containerPort: 80
+          volumeMounts:
+            - name: html-config
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+      volumes:
+        - name: html-config
+          configMap:
+            name: nginx-html
 ---
 apiVersion: v1
 kind: Service
