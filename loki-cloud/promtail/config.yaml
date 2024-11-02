@@ -6,7 +6,7 @@ positions:
   filename: ./tmp/positions.yaml
 
 clients:
-  - url: https://363390:<Your Grafana.com API Token>@logs-prod-011.grafana.net/loki/api/v1/push
+  - url: https://<Your Unique Value>:<Your Grafana.com API Token>@logs-prod-<Your Value>.grafana.net/loki/api/v1/push
 
 
 scrape_configs:
@@ -16,6 +16,6 @@ scrape_configs:
           - localhost
         labels:
           job: my-devops-practice
-          host: my-labtop
-          __path__: ./tmp/*.log
-          # __path__: /var/log/*.log  # config for container
+          host: my-laptop
+          # __path__: ./tmp/*.log  # config for binary at Windows
+          __path__: /var/log/*.log  # config for container
