@@ -31,10 +31,16 @@ poetry --version
 poetry install
 ```
 
-테스트용 패키지까지 포함하여 설치하려면:
+테스트용 패키지만 설치하려면:
 
 ```bash
-poetry install --with test
+poetry install --only dev
+```
+
+현재 프로젝트 설치 없이, 테스트용 패키지만 설치하려면:
+
+```bash
+poetry install --only dev --no-root
 ```
 
 ---
@@ -116,9 +122,10 @@ GitHub Actions를 사용하여 **패키지 빌드 → 패키지 테스트 → Do
 ```bash
 # 패키지 빌드
 poetry build
-pip install dist/*.whl
+poetry run pip install dist/*.whl
 
 # 패키지 테스트
+poetry install --only dev --no-root
 poetry run pytest
 
 # Docker 이미지 빌드
