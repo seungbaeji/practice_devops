@@ -26,7 +26,7 @@ testpaths = [
     "tests",
 ]
 pythonpath = [
-    "src",
+    ".",
 ]
 
 [build-system]

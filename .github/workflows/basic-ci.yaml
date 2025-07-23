@@ -53,11 +53,6 @@ jobs:
       - name: Install Poetry
         run: pip install poetry
 
-      # 의존성 설치 (개발용 패키지 제외)
-      - name: Install project dependencies (no dev)
-        working-directory: ./basic-ci
-        run: poetry install --without dev
-
       # wheel 패키지 빌드
       - name: Build wheel package
         working-directory: ./basic-ci
@@ -101,7 +96,7 @@ jobs:
         working-directory: ./basic-ci
         run: |
           pip install ../wheel/*.whl
-          poetry install --with dev
+          poetry install --only dev
 
       # 테스트 실행 및 커버리지 측정
       - name: Run tests and coverage
