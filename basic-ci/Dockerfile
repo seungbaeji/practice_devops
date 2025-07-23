@@ -1,4 +1,5 @@
-FROM python:3.11-slim-buster AS builder
+# ---- Builder Stage ----
+FROM python:3.11-slim-bookworm AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
@@ -8,24 +9,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 
-RUN pip install --no-cache-dir poetry poetry-plugin-export
-RUN poetry export -f requirements.txt \
-    --output requirements.txt \
-    --without-hashes \
-    && pip install --no-cache-dir --user -r requirements.txt
+# poetry 설치 및 wheel 빌드
+RUN pip install --no-cache-dir poetry poetry-core
+COPY . .
+RUN poetry build -f wheel
+# 결과: /app/dist/*.whl
 
-FROM python:3.11-slim-buster AS release
+# ---- Release Stage (Alpine) ----
+FROM python:3.11-alpine AS release
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+RUN apk add --no-cache \
+    libpq \
+    && apk add --no-cache --virtual .build-deps \
+    libstdc++ \
+    bash
 
 WORKDIR /app
 
-COPY ./basic_ci .
-COPY ./main.py .
+# 빌더에서 생성된 wheel 파일 복사
+COPY --from=builder /app/dist/*.whl ./
 
-ENTRYPOINT ["python", "main.py"]
+# wheel 설치
+RUN pip install --no-cache-dir ./*.whl \
+    && rm ./*.whl
+
+ENV PYTHONUNBUFFERED=1
+CMD ["basic-ci"]
