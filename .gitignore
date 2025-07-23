@@ -48,3 +48,6 @@ pytest_cache/
 # Pycharm files
 *.iml
 .idea/
+
+# Formatting tools
+.ruff_cache/
