@@ -93,8 +93,9 @@ jobs:
 
       # wheel 설치
       - name: Install built wheel
+        working-directory: ./basic-ci
         run: |
-          poetry run pip install wheel/*.whl
+          poetry run pip install ../wheel/*.whl
 
       # dev dependencies 설치 (editable 모드 없이)
       - name: Install dev dependencies
