@@ -7,18 +7,8 @@ on:
       - ".github/workflows/basic-ci.yaml"
       - "basic-ci/**"
 
-  # workflow_dispatch: GitHub Actions에서 수동(Manual)으로 워크플로우를 실행할 수 있게 하는 트리거
-  # - GitHub UI에서 "Run workflow" 버튼을 눌러 environment, version 등을 직접 지정하여 실행할 수 있음
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: "Which environment to deploy to" # 배포 대상 환경
-        default: "dev"
-      version:
-        description: "Version to deploy" # 배포할 버전
-        default: "latest"
-
 # permissions: GITHUB_TOKEN(내장 인증 토큰)의 권한 설정 (전역)
+# job 내부에서 actions/checkout@v4 같은 액션이 GITHUB_TOKEN을 필요로 할 수 있음
 # - contents: read → 저장소 코드/파일 읽기 가능
 permissions:
   contents: read
@@ -148,17 +138,3 @@ jobs:
             --platform linux/amd64,linux/arm64 \
             --push \
             -t ghcr.io/${{ github.repository }}/basic-ci:latest
-
-  # ---- 4. Deploy ----
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build-image
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # workflow_dispatch로 입력받은 환경/버전으로 배포
-      - name: Deploy application
-        working-directory: ./basic-ci
-        run: |
-          echo "Deploying version ${{ github.event.inputs.version }} to ${{ github.event.inputs.environment }} environment"
