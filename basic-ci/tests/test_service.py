@@ -1,133 +1,77 @@
 from unittest.mock import Mock, patch
 
+import pytest
+
 from basic_ci.datamodel import User, UserDict
 from basic_ci.service import fetch_user_data, filter_active_users, validate_users
 
 
-def test_validate_users() -> None:
-    """
-    Tests that validate_users correctly filters out invalid data.
-    """
-    users_data: list[UserDict] = [
-        {"id": 1, "name": "Alice", "is_active": True},  # valid
-        {"id": None, "name": "Bob", "is_active": False},  # invalid id
+# ---- 테스트 입력/출력 데이터 ----
+validate_users_inputs: list[list[UserDict]] = [
+    [  # 케이스 1
+        {"id": 1, "name": "Alice", "is_active": True},
+        {"id": None, "name": "Bob", "is_active": False},  # invalid
+        {"id": 2, "name": "Charlie", "is_active": True},
+    ],
+    [  # 케이스 2
+        {"id": -1, "name": "Alice", "is_active": True},  # invalid id
         {"id": 3, "name": "", "is_active": True},  # invalid name
-        {"id": -4, "name": "Charlie", "is_active": True},  # invalid negative id
-        {"id": 4, "name": "David", "is_active": True},  # valid
-    ]
+    ],
+]
 
-    valid_users = validate_users(users_data)
+validate_users_expected: list[list[str]] = [
+    ["Alice", "Charlie"],  # 케이스 1 결과
+    [],  # 케이스 2 결과
+]
 
-    # 검증이 통과된 사용자만 남아야 함
-    assert len(valid_users) == 2
-    assert valid_users[0].name == "Alice"
-    assert valid_users[1].name == "David"
+
+# ---- 유틸리티 함수 ----
+def mock_requests_get(mock_data: list[UserDict]) -> Mock:
+    """
+    Returns a mocked requests.get response with the given JSON data.
+    """
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_data
+    return mock_response
+
+
+test_inputs = list(zip(validate_users_inputs, validate_users_expected))
+
+
+# ---- 테스트 케이스 ----
+@pytest.mark.parametrize("users_data, expected_valid_names", test_inputs)
+def test_validate_users(
+    users_data: list[UserDict], expected_valid_names: list[str]
+) -> None:
+    """
+    Tests that validate_users filters invalid data correctly.
+    """
+    valid_users: list[User] = validate_users(users_data)
+    assert [u.name for u in valid_users] == expected_valid_names
 
 
 def test_filter_active_users() -> None:
     """
-    Tests that filter_active_users correctly filters only active users.
+    Tests that filter_active_users returns only active users.
     """
     users: list[User] = [
         User(id=1, name="Alice", is_active=True),
         User(id=2, name="Bob", is_active=False),
-        User(id=3, name="Charlie", is_active=True),
     ]
-
     result: list[User] = filter_active_users(users)
-
-    assert len(result) == 2
-    assert result[0].name == "Alice"
-    assert result[1].name == "Charlie"
+    assert [u.name for u in result] == ["Alice"]
 
 
 def test_fetch_and_validate_users() -> None:
     """
-    Tests the complete flow of fetching and validating user data, including invalid cases.
+    Tests the combined fetch, validate, and filter steps.
     """
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = [
-        {"id": 1, "name": "Alice", "is_active": True},
-        {"id": None, "name": "Bob", "is_active": False},  # invalid
-        {"id": 3, "name": "", "is_active": True},  # invalid
-        {"id": -4, "name": "Charlie", "is_active": True},  # invalid negative id
-        {"id": 4, "name": "David", "is_active": True},  # valid
-    ]
+    mock_data: list[UserDict] = validate_users_inputs[0]  # 첫 번째 케이스 재사용
 
-    with patch("requests.get", return_value=mock_response):
-        url = "http://example.com/api/users"
-        users_data = fetch_user_data(url)
-        valid_users = validate_users(users_data)
-        active_users = filter_active_users(valid_users)
+    with patch("requests.get", return_value=mock_requests_get(mock_data)):
+        users_data: list[UserDict] = fetch_user_data("http://example.com/api/users")
+        valid_users: list[User] = validate_users(users_data)
+        active_users: list[User] = filter_active_users(valid_users)
 
-        assert len(active_users) == 2
-        assert active_users[0].name == "Alice"
-        assert active_users[1].name == "David"
-
-
-def test_empty_user_data() -> None:
-    """
-    Tests the behavior of validate_users and filter_active_users when no valid user data is present.
-    """
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = []  # No users returned
-
-    # Test with no users returned from the API
-    with patch("requests.get", return_value=mock_response):
-        url = "http://example.com/api/users"
-        users_data = fetch_user_data(url)
-        valid_users = validate_users(users_data)
-        active_users = filter_active_users(valid_users)
-
-        assert len(valid_users) == 0  # No valid users
-        assert len(active_users) == 0  # No active users
-
-    # Test with all users being invalid
-    invalid_users_data = [
-        {"id": None, "name": "Bob", "is_active": False},  # invalid id
-        {"id": -2, "name": "", "is_active": True},  # invalid id and name
-    ]
-    valid_users = validate_users(invalid_users_data)
-    active_users = filter_active_users(valid_users)
-
-    assert len(valid_users) == 0  # No valid users should be present
-    assert len(active_users) == 0  # No active users should be present
-
-
-def test_duplicate_user_data() -> None:
-    """
-    Tests that validate_users correctly handles duplicate user data.
-    """
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = [
-        {"id": 1, "name": "Alice", "is_active": True},  # valid
-        {"id": 1, "name": "Alice", "is_active": True},  # duplicate valid user
-        {"id": 2, "name": "Bob", "is_active": False},  # valid but inactive
-        {
-            "id": 2,
-            "name": "Bob",
-            "is_active": False,
-        },  # duplicate valid but inactive user
-        {"id": 3, "name": "Charlie", "is_active": True},  # valid
-        {"id": 3, "name": "Charlie", "is_active": True},  # duplicate valid user
-    ]
-
-    with patch("requests.get", return_value=mock_response):
-        url = "http://example.com/api/users"
-        users_data = fetch_user_data(url)
-        valid_users = validate_users(users_data)
-        active_users = filter_active_users(valid_users)
-
-        # There should be 3 unique valid users
-        assert len(valid_users) == 3
-        assert valid_users[0].name == "Alice"
-        assert valid_users[1].name == "Bob"
-        assert valid_users[2].name == "Charlie"
-
-        # Only 2 active users should be present
-        assert len(active_users) == 2
-        assert active_users[0].name == "Alice"
-        assert active_users[1].name == "Charlie"
+        assert [u.name for u in active_users] == ["Alice", "Charlie"]

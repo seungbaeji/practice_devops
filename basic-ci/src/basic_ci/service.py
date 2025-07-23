@@ -3,7 +3,7 @@ from __future__ import annotations
 import requests
 from pydantic import ValidationError
 
-from .datamodel import User, UserDict
+from basic_ci.datamodel import User, UserDict
 
 
 def fetch_user_data(url: str) -> list[UserDict]:
