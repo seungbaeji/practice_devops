@@ -91,17 +91,23 @@ jobs:
           name: package-wheel
           path: ./wheel
 
-      # wheel 및 개발용 의존성 설치
-      - name: Install wheel and dev dependencies
+      # wheel 설치
+      - name: Install built wheel
+        run: |
+          pip install wheel/*.whl
+
+      # 개발용 의존성(dev dependencies) 설치
+      - name: Install dev dependencies
         working-directory: ./basic-ci
         run: |
-          pip install ../wheel/*.whl
-          poetry install --only dev
+          poetry install --only dev --no-root
 
       # 테스트 실행 및 커버리지 측정
       - name: Run tests and coverage
-        working-directory: ./basic-ci
-        run: poetry run pytest --cov=./ --cov-report=xml
+        working-directory: ./basic-ci/tests
+        run: |
+          poetry run pytest --cov=./ --cov-report=xml
+
 
   # ---- 3. Build & Push Docker Image ----
   build-image:
