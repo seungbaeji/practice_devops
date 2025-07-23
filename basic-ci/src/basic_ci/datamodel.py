@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, TypedDict
+from typing import TypedDict
 
 from pydantic import BaseModel, Field
 
@@ -13,5 +13,5 @@ class User(BaseModel):
 
 class UserDict(TypedDict):
     id: int
-    name: Optional[str]
-    is_active: Optional[bool]
+    name: str | None
+    is_active: bool | None
