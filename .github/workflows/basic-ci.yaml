@@ -6,112 +6,157 @@ on:
     paths:
       - ".github/workflows/basic-ci.yaml"
       - "basic-ci/**"
-  pull_request:
-    branches: [main]
-    paths:
-      - ".github/workflows/basic-ci.yaml"
-      - "basic-ci/**"
+
+  # workflow_dispatch: GitHub Actions에서 수동(Manual)으로 워크플로우를 실행할 수 있게 하는 트리거
+  # - GitHub UI에서 "Run workflow" 버튼을 눌러 environment, version 등을 직접 지정하여 실행할 수 있음
   workflow_dispatch:
     inputs:
       environment:
-        description: "Which environment to deploy to"
-        required: false
+        description: "Which environment to deploy to" # 배포 대상 환경
         default: "dev"
       version:
-        description: "Version to deploy"
-        required: false
+        description: "Version to deploy" # 배포할 버전
         default: "latest"
 
-env:
-  REGISTRY: ghcr.io
+# permissions: GITHUB_TOKEN(내장 인증 토큰)의 권한 설정 (전역)
+# - contents: read → 저장소 코드/파일 읽기 가능
+permissions:
+  contents: read
 
 jobs:
+  # ---- 1. Build Package ----
+  build-package:
+    runs-on: ubuntu-latest # GitHub이 제공하는 최신 Ubuntu VM에서 실행
+    outputs:
+      python_version: ${{ steps.extract_version.outputs.python_version }}
+
+    steps:
+      # 저장소 코드 체크아웃 (git clone과 동일한 역할)
+      - name: Checkout repository
+        uses: actions/checkout@v4 # GitHub 공식 checkout 액션 (v4 버전 사용)
+
+      # Python 버전을 basic-ci/.python-version 파일에서 추출
+      - name: Extract Python version from .python-version
+        id: extract_version
+        working-directory: ./basic-ci
+        run: |
+          version=$(cat .python-version)
+          echo "python_version=$version" >> $GITHUB_OUTPUT  # Job output에 Python 버전 저장
+
+      # 지정된 Python 버전 설치
+      - name: Set up Python ${{ steps.extract_version.outputs.python_version }}
+        uses: actions/setup-python@v5 # GitHub 공식 Python 세팅 액션
+        with:
+          python-version: ${{ steps.extract_version.outputs.python_version }}
+
+      # Poetry 설치
+      - name: Install Poetry
+        run: pip install poetry
+
+      # 의존성 설치 (개발용 패키지 제외)
+      - name: Install project dependencies (no dev)
+        working-directory: ./basic-ci
+        run: poetry install --without dev
+
+      # wheel 패키지 빌드
+      - name: Build wheel package
+        working-directory: ./basic-ci
+        run: |
+          poetry build -f wheel
+          ls -lh dist/
+
+      # 빌드한 wheel 파일을 다른 Job에서도 쓸 수 있게 아티팩트로 업로드
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-wheel
+          path: ./basic-ci/dist/*.whl
+
+  # ---- 2. Test ----
   test:
     runs-on: ubuntu-latest
-    env:
-      PROJECT_DIR: basic-ci
+    needs: build-package # build-package Job 완료 후 실행됨
 
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Extract Python version from pyproject.toml
-        run: |
-          PYTHON_VERSION=$(grep -Po '(?<=python = ")[^"]*' ${{ env.PROJECT_DIR }}/pyproject.toml | sed 's/\^//')
-          echo "Python version extracted: $PYTHON_VERSION"
-          echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_ENV
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ needs.build-package.outputs.python_version }}
 
       - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "export PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
+        run: pip install poetry
 
-      - name: Install dependencies (dev)
-        run: |
-          cd ${{ env.PROJECT_DIR }}
-          poetry install
-
-      - name: Run tests and collect coverage
-        run: |
-          cd ${{ env.PROJECT_DIR }}
-          poetry run pytest --cov=./ --cov-report=xml
-        continue-on-error: true
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      # build-package Job에서 업로드한 wheel 파일 다운로드
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          flags: ${{ env.PROJECT_DIR }}
-          file: ${{ env.PROJECT_DIR }}/coverage.xml
-          name: ${{ env.PROJECT_DIR }}-coverage-report
+          name: package-wheel
+          path: ./wheel
 
-  build:
+      # wheel 및 개발용 의존성 설치
+      - name: Install wheel and dev dependencies
+        working-directory: ./basic-ci
+        run: |
+          pip install ../wheel/*.whl
+          poetry install --with dev
+
+      # 테스트 실행 및 커버리지 측정
+      - name: Run tests and coverage
+        working-directory: ./basic-ci
+        run: poetry run pytest --cov=./ --cov-report=xml
+
+  # ---- 3. Build & Push Docker Image ----
+  build-image:
     runs-on: ubuntu-latest
-    needs:
-      - test
+    needs: test # 테스트 통과 후 실행
     permissions:
-      contents: read
+      # - packages: write → GitHub Container Registry(GHCR)에 Docker 이미지 푸시 가능
       packages: write
-    env:
-      PROJECT_DIR: basic-ci
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: package-wheel
+          path: ./dist
+
+      # Docker Buildx 설정 (멀티 아키텍처 빌드 지원)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log into registry
+      # GitHub Container Registry(GHCR) 로그인
+      - name: Log into GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
+      # Docker 이미지 빌드 & 푸시
       - name: Build and push Docker image
-        working-directory: ./${{ env.PROJECT_DIR }}
+        working-directory: ./basic-ci
         run: |
           docker buildx build . \
-            --platform linux/amd64 \
+            --platform linux/amd64,linux/arm64 \
             --push \
-            -t ${{ env.REGISTRY }}/${{ github.actor }}/practice/${{ env.PROJECT_DIR }}:latest
+            -t ghcr.io/${{ github.repository }}/practice/basic-ci:latest
 
+  # ---- 4. Deploy ----
   deploy:
     runs-on: ubuntu-latest
-    needs:
-      - test
-      - build
-    env:
-      PROJECT_DIR: basic-ci
-
+    needs: build-image
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      # workflow_dispatch로 입력받은 환경/버전으로 배포
       - name: Deploy application
+        working-directory: ./basic-ci
         run: |
-          cd ${{ env.PROJECT_DIR }}
           echo "Deploying version ${{ github.event.inputs.version }} to ${{ github.event.inputs.environment }} environment"
