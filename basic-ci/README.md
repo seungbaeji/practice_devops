@@ -1,99 +1,131 @@
-# 프로젝트 설정
+# CI/CD 실습 프로젝트
 
-이 프로젝트는 **Poetry**를 사용하여 의존성 관리를 수행합니다. Poetry는 Python 패키지 관리를 쉽게 하고, 가상 환경을 통합적으로 관리할 수 있게 해줍니다.
+이 프로젝트는 **CI/CD 실습**을 목적으로 작성되었으며,
+Poetry로 관리된 Python 패키지를 **Docker 이미지로 빌드하고 GHCR에 푸시하는 과정**을 다룹니다.
 
-## 1. Poetry 설치
+---
 
-Poetry를 설치하려면 다음 명령어를 실행하세요:
+## 1. Poetry 설치 및 패키지 설치
+
+### 1-1. Poetry 설치
+
+Poetry를 설치하려면 다음 명령어 중 하나를 실행하세요:
 
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
-# or
-pip install poerty
+# 또는
+pip install poetry
 ```
 
-설치가 완료되면, Poetry 명령어가 정상적으로 동작하는지 확인합니다:
+설치 확인:
 
 ```bash
 poetry --version
 ```
 
-## 2. Poetry를 이용한 프로젝트 설정
+### 1-2. 프로젝트 의존성 설치
 
-### 2-1. 프로젝트 생성
-
-다음 명령어로 새로운 Poetry 프로젝트를 생성할 수 있습니다:
+`pyproject.toml`에 정의된 의존성을 설치하려면:
 
 ```bash
-poetry new your_project_name
+poetry install
 ```
 
-또는, 기존 프로젝트에서 Poetry를 초기화하려면 프로젝트 루트에서 다음 명령어를 실행합니다:
+테스트용 패키지까지 포함하여 설치하려면:
 
 ```bash
-poetry init
-```
-
-Poetry가 상호작용형 방식으로 `pyproject.toml` 파일을 생성하도록 안내합니다.
-
-### 2-2. 의존성 설치
-
-프로덕션 및 개발 환경에서 사용할 패키지를 설치하려면 다음 명령어를 사용합니다:
-
-#### 프로덕션 패키지 설치
-
-```bash
-poetry add package_name
-```
-
-#### 기타 의존성 패키지 설치
-
-```bash
-poetry add --dev package_name  # 개발
-poetry add --group test package_name  # 테스트
-```
-
-### 2-3. 가상 환경 활성화 및 관리
-
-Poetry는 가상 환경을 자동으로 관리합니다. 다음 명령어로 가상 환경을 활성화할 수 있습니다:
-
-```bash
-poetry shell
-```
-
-가상 환경을 비활성화하려면 `exit` 명령어를 사용합니다.
-
-### 2-4. 의존성 설치 및 업데이트
-
-`pyproject.toml` 파일에 정의된 모든 의존성을 설치하려면 다음 명령어를 실행하세요:
-
-```bash
-poetry install  # install all
 poetry install --with test
-poetry install --with dev test
-poetry install --without dev test eda
 ```
 
-의존성을 업데이트하려면 다음 명령어를 실행합니다:
+---
 
-```bash
-poetry update
-```
+## 2. 테스트 실행
 
-### 2-5. 테스트 실행
-
-테스트를 실행하기 위해서는 개발 의존성에 `pytest`를 추가한 뒤, 다음과 같이 테스트를 실행할 수 있습니다:
+`pytest`를 사용하여 테스트를 실행할 수 있습니다:
 
 ```bash
 poetry run pytest
 ```
 
-### 2-6. 프로젝트 빌드
+---
 
-프로젝트를 패키징하려면 다음 명령어를 사용하여 빌드할 수 있습니다:
+## 3. 프로젝트 빌드 (패키징)
+
+Poetry를 이용해 패키지를 `.whl` 및 `.tar.gz` 파일로 빌드할 수 있습니다:
 
 ```bash
 poetry build
+poetry build -f wheel  # wheel만 생성
+poetry build -f sdist  # sdist만 생성
 ```
 
-이 명령어는 프로젝트를 배포 가능한 `.tar.gz` 또는 `.whl` 파일로 패키징합니다.
+빌드된 아티팩트는 `dist/` 폴더에 생성됩니다.
+
+---
+
+## 4. Docker 빌드 및 실행
+
+Dockerfile을 기반으로 이미지를 빌드하고 실행할 수 있습니다.
+
+### 4-1. Docker 이미지 빌드
+
+```bash
+docker build -t basic-ci:latest .
+```
+
+### 4-2. Docker 컨테이너 실행
+
+```bash
+docker run --rm -it basic-ci:latest
+```
+
+---
+
+## 5. GHCR로 Docker 이미지 푸시
+
+### 5-1. GHCR 로그인
+
+```bash
+export GITHUB_TOKEN=<your-pat-token>
+echo $GITHUB_TOKEN | docker login ghcr.io -u <github-username> --password-stdin
+```
+
+* **`GITHUB_TOKEN`** 또는 \*\*Personal Access Token(PAT)\*\*은 `write:packages` 권한이 필요합니다.
+
+### 5-2. GHCR에 태그 및 푸시
+
+```bash
+docker tag basic-ci:latest ghcr.io/<github-username>/<repo-name>:latest
+docker push ghcr.io/<github-username>/<repo-name>:latest
+```
+
+### 5-3. 예시
+
+```bash
+docker build -t ghcr.io/my-org/basic-ci:latest .
+docker push ghcr.io/my-org/basic-ci:latest
+```
+
+---
+
+## 6. GitHub Actions를 활용한 CI/CD
+
+GitHub Actions를 사용하여 **패키지 빌드 → 패키지 테스트 → Docker 이미지 빌드 → GHCR 푸시** 과정을 자동화할 수 있습니다.
+수동 실행 명령어는 다음과 같습니다:
+
+```bash
+# 패키지 빌드
+poetry build
+pip install dist/*.whl
+
+# 패키지 테스트
+poetry run pytest
+
+# Docker 이미지 빌드
+docker build -t ghcr.io/<github-username>/<repo-name>:latest .
+
+# GHCR 푸시
+docker push ghcr.io/<github-username>/<repo-name>:latest
+```
+
+---
