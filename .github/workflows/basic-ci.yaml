@@ -147,7 +147,7 @@ jobs:
           docker buildx build . \
             --platform linux/amd64,linux/arm64 \
             --push \
-            -t ghcr.io/${{ github.repository }}/practice/basic-ci:latest
+            -t ghcr.io/${{ github.repository }}/basic-ci:latest
 
   # ---- 4. Deploy ----
   deploy:
