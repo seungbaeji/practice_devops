@@ -96,15 +96,15 @@ jobs:
         run: |
           pip install wheel/*.whl
 
-      # 개발용 의존성(dev dependencies) 설치
+      # dev dependencies 설치 (editable 모드 없이)
       - name: Install dev dependencies
         working-directory: ./basic-ci
         run: |
-          poetry install --only dev
+          poetry install --only dev --no-root
 
-      # 테스트 실행 및 커버리지 측정
+      # 테스트 실행
       - name: Run tests and coverage
-        working-directory: ./basic-ci/tests
+        working-directory: ./basic-ci
         run: |
           poetry run pytest --cov=./ --cov-report=xml
 
